@@ -2,10 +2,14 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.acubelab</groupId>
-	<artifactId>bing-interface</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<artifactId>bing-api-java</artifactId>
+	<version>0.1-SNAPSHOT</version>
 	<name>Bing Interface and result cache</name>
 	<description>Interface towards the Bing API with result caching.</description>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.codehaus.jettison</groupId>
@@ -23,8 +27,51 @@
 			<version>1.0</version>
 		</dependency>
 	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-source-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 	<build>
 		<plugins>
+			<plugin>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.4.1</version>
+				<configuration>
+					<useReleaseProfile>false</useReleaseProfile>
+					<releaseProfiles>release</releaseProfiles>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -45,7 +92,25 @@
 					</archive>
 				</configuration>
 			</plugin>
-
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.1.2</version>
+			</plugin>
 		</plugins>
 	</build>
+	<scm>
+		<connection>scm:git:https://github.com/marcocor/${project.artifactId}.git</connection>
+		<developerConnection>scm:git:git@github.com:marcocor/${project.artifactId}.git</developerConnection>
+		<url>https://github.com/marcocor/${project.artifactId}</url>
+		<tag>HEAD</tag>
+	</scm>
+
+	<distributionManagement>
+		<repository>
+			<id>bintray-marcocor-maven</id>
+			<url>https://api.bintray.com/maven/marcocor/maven/${project.artifactId}</url>
+			<!--			<url>https://api.bintray.com/content/marcocor/maven/${project.artifactId}/${project.version}</url>-->
+		</repository>
+	</distributionManagement>
 </project>
