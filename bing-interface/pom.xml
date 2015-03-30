@@ -8,6 +8,22 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+	<url>http://github.com/marcocor/bing-api-java</url>
+	<licenses>
+		<license>
+			<name>GNU General Public License, Version 3.0</name>
+			<url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Marco Cornolti</name>
+			<email>cornolti@di.unipi.it</email>
+			<organization>Acubelab</organization>
+			<organizationUrl>http://acube.di.unipi.it/</organizationUrl>
+		</developer>
+	</developers>
 
 	<dependencies>
 		<dependency>
@@ -104,12 +120,10 @@
 		<url>https://github.com/marcocor/${project.artifactId}</url>
 		<tag>HEAD</tag>
 	</scm>
-
 	<distributionManagement>
 		<repository>
 			<id>bintray-marcocor-maven</id>
 			<url>https://api.bintray.com/maven/marcocor/maven/${project.artifactId}</url>
-			<!--			<url>https://api.bintray.com/content/marcocor/maven/${project.artifactId}/${project.version}</url>-->
 		</repository>
 	</distributionManagement>
 </project>

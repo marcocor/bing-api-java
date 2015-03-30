@@ -3,9 +3,7 @@ package it.acubelab;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.util.zip.*;
 
-import org.apache.commons.io.IOUtils;
 import org.codehaus.jettison.json.*;
 
 import com.sun.org.apache.xml.internal.security.utils.Base64;
@@ -85,7 +83,7 @@ public class BingInterface {
 		JSONObject result = null;
 		byte[] compressed = url2jsonCache.get(url.toExternalForm());
 		if (compressed != null)
-			result = new JSONObject(decompress(compressed));
+			result = new JSONObject(StringCompress.decompress(compressed));
 
 		boolean cached = !forceCacheOverride && result != null;
 		System.out.printf("%s%s %s%n", forceCacheOverride ? "<forceCacheOverride>" : "", cached ? "<cached>"
@@ -109,7 +107,7 @@ public class BingInterface {
 			Scanner s = new Scanner(connection.getInputStream()).useDelimiter("\\A");
 			String resultStr = s.hasNext() ? s.next() : "";
 			result = new JSONObject(resultStr);
-			url2jsonCache.put(url.toExternalForm(), compress(result.toString()));
+			url2jsonCache.put(url.toExternalForm(), StringCompress.compress(result.toString()));
 			increaseFlushCounter();
 		}
 
@@ -175,36 +173,5 @@ public class BingInterface {
 			oos.close();
 			System.out.println("Flushing Bing cache Done.");
 		}
-	}
-	/**
-	 * Compress a string with GZip.
-	 * 
-	 * @param str
-	 *            the string.
-	 * @return the compressed string.
-	 * @throws IOException
-	 *             if something went wrong during compression.
-	 */
-	public static byte[] compress(String str) throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		GZIPOutputStream gzip = new GZIPOutputStream(out);
-		gzip.write(str.getBytes());
-		gzip.close();
-		return out.toByteArray();
-	}
-
-	/**
-	 * Decompress a GZipped string.
-	 * 
-	 * @param compressed
-	 *            the sequence of bytes
-	 * @return the decompressed string.
-	 * @throws IOException
-	 *             if something went wrong during decompression.
-	 */
-	public static String decompress(byte[] compressed) throws IOException {
-		GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(
-				compressed));
-		return new String(IOUtils.toByteArray(gis));
 	}
 }
