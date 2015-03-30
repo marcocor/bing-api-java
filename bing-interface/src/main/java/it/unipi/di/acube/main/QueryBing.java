@@ -1,8 +1,8 @@
-package it.acubelab.main;
+package it.unipi.di.acube.main;
 
 import org.codehaus.jettison.json.JSONObject;
 
-import it.acubelab.BingInterface;
+import it.unipi.di.acube.BingInterface;
 
 public class QueryBing {
 

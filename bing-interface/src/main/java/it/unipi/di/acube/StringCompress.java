@@ -1,4 +1,4 @@
-package it.acubelab;
+package it.unipi.di.acube;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
