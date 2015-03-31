@@ -121,6 +121,10 @@
 		<tag>bing-api-java-0.1</tag>
 	</scm>
 	<distributionManagement>
+		<snapshotRepository>
+			<id>oss-sonatype</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
 		<repository>
 			<id>bintray-marcocor-maven</id>
 			<url>https://api.bintray.com/maven/marcocor/maven/${project.artifactId}</url>
