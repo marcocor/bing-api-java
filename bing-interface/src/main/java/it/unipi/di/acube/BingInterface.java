@@ -5,6 +5,11 @@ import java.net.*;
 import java.util.*;
 
 import org.codehaus.jettison.json.*;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
@@ -75,13 +80,12 @@ public class BingInterface {
 			Thread.sleep(1000);
 		String accountKeyAuth = Base64.encode((bingKey + ":" + bingKey).getBytes(), 0);
 
-		URL url = new URL(
-				"https://api.datamarket.azure.com/Bing/Search/v1/Composite?Sources=%27web%2Bspell%2BRelatedSearch%27&Query=%27"
-						+ URLEncoder.encode(query, "utf8")
-						+ "%27&Options=%27EnableHighlighting%27&Market=%27en-US%27&Adult=%27Off%27&$format=Json");
+		String url = "https://api.datamarket.azure.com/Bing/Search/v1/Composite?Sources=%27web%2Bspell%2BRelatedSearch%27&Query=%27"
+				+ URLEncoder.encode(query, "utf8")
+				+ "%27&Options=%27EnableHighlighting%27&Market=%27en-US%27&Adult=%27Off%27&$format=Json";
 
 		JSONObject result = null;
-		byte[] compressed = url2jsonCache.get(url.toExternalForm());
+		byte[] compressed = url2jsonCache.get(url);
 		if (compressed != null)
 			result = new JSONObject(StringCompress.decompress(compressed));
 
@@ -89,25 +93,20 @@ public class BingInterface {
 		System.out.printf("%s%s %s%n", forceCacheOverride ? "<forceCacheOverride>" : "", cached ? "<cached>"
 				: "Querying", url);
 		if (!cached) {
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setConnectTimeout(0);
-			connection.setRequestProperty("Authorization", "Basic " + accountKeyAuth);
-			connection.setRequestProperty("Accept", "*/*");
-			connection.setRequestProperty("Content-Type", "multipart/form-data");
+			HttpGet get = new HttpGet(url);
+			get.setHeader("Authorization", "Basic " + accountKeyAuth);
+			get.setHeader("Accept", "*/*");
+			get.setHeader("Content-Type", "multipart/form-data");
 
-			connection.setUseCaches(false);
+			HttpClient httpClient = HttpClientBuilder.create().build();
+			HttpResponse response = httpClient.execute(get);
 
-			if (connection.getResponseCode() != 200) {
-				Scanner s = new Scanner(connection.getErrorStream()).useDelimiter("\\A");
-				System.err.printf("Got HTTP error %d. Message is: %s%n", connection.getResponseCode(), s.next());
-				s.close();
-				throw new RuntimeException("Got response code:" + connection.getResponseCode());
+			if (response.getStatusLine().getStatusCode() != 200) {
+				System.err.printf("Got HTTP error %d. Message is: %s%n", response.getStatusLine().getStatusCode(), IOUtils.toString(response.getEntity().getContent(), "utf-8"));
+				throw new RuntimeException("Got response code:" + response.getStatusLine().getStatusCode());
 			}
-
-			Scanner s = new Scanner(connection.getInputStream()).useDelimiter("\\A");
-			String resultStr = s.hasNext() ? s.next() : "";
-			result = new JSONObject(resultStr);
-			url2jsonCache.put(url.toExternalForm(), StringCompress.compress(result.toString()));
+			result = new JSONObject(IOUtils.toString(response.getEntity().getContent(), "utf-8"));
+			url2jsonCache.put(url, StringCompress.compress(result.toString()));
 			increaseFlushCounter();
 		}
 
