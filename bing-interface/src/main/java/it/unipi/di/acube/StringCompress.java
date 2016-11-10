@@ -22,7 +22,7 @@ public class StringCompress {
 	public static byte[] compress(String str) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		GZIPOutputStream gzip = new GZIPOutputStream(out);
-		gzip.write(str.getBytes());
+		gzip.write(str.getBytes("utf-8"));
 		gzip.close();
 		return out.toByteArray();
 	}
@@ -38,6 +38,6 @@ public class StringCompress {
 	 */
 	public static String decompress(byte[] compressed) throws IOException {
 		GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(compressed));
-		return new String(IOUtils.toByteArray(gis));
+		return new String(IOUtils.toByteArray(gis), "utf-8");
 	}
 }
