@@ -1,5 +1,6 @@
 package it.unipi.di.acube.searchapi.bing;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
@@ -17,6 +18,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import it.unipi.di.acube.searchapi.interfaces.CacheableWebSearchApi;
 import it.unipi.di.acube.searchapi.model.WebsearchResponse;
@@ -28,6 +31,7 @@ import it.unipi.di.acube.searchapi.model.WebsearchResponseEntry;
  *
  */
 public class BingSearchApi implements CacheableWebSearchApi {
+    public final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String API_PROTOCOL = "https";
     private static final String API_HOST = "api.cognitive.microsoft.com";
     private static final String API_PATH = "/bing/v5.0/search";
@@ -111,7 +115,7 @@ public class BingSearchApi implements CacheableWebSearchApi {
         HttpResponse response = httpClient.execute(get);
 
         if (response.getStatusLine().getStatusCode() != 200) {
-            System.err.printf("Got HTTP error %d. Message is: %s%n", response.getStatusLine().getStatusCode(),
+            LOG.error("Got HTTP error {}. Message is: {}", response.getStatusLine().getStatusCode(),
                     IOUtils.toString(response.getEntity().getContent(), "utf-8"));
             throw new RuntimeException("Got response code:" + response.getStatusLine().getStatusCode());
         }

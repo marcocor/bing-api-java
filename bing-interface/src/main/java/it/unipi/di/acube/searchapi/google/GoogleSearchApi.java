@@ -1,5 +1,6 @@
 package it.unipi.di.acube.searchapi.google;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -15,6 +16,8 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.jsoup.Jsoup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import it.unipi.di.acube.searchapi.interfaces.CacheableWebSearchApi;
 import it.unipi.di.acube.searchapi.interfaces.WebSearchApi;
@@ -27,6 +30,7 @@ import it.unipi.di.acube.searchapi.model.WebsearchResponseEntry;
  *
  */
 public class GoogleSearchApi implements CacheableWebSearchApi {
+    public final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String API_PROTOCOL = "https";
     private static final String API_HOST = "www.googleapis.com";
     private static final String API_PATH = "/customsearch/v1";
@@ -107,7 +111,7 @@ public class GoogleSearchApi implements CacheableWebSearchApi {
         HttpResponse response = httpClient.execute(get);
 
         if (response.getStatusLine().getStatusCode() != 200) {
-            System.err.printf("Got HTTP error %d. Message is: %s%n", response.getStatusLine().getStatusCode(),
+            LOG.error("Got HTTP error {}. Message is: {}", response.getStatusLine().getStatusCode(),
                     IOUtils.toString(response.getEntity().getContent(), "utf-8"));
             throw new RuntimeException("Got response code:" + response.getStatusLine().getStatusCode());
         }
