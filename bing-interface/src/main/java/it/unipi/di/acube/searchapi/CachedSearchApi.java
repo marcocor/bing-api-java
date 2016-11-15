@@ -1,39 +1,38 @@
 package it.unipi.di.acube.searchapi;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 
 import org.codehaus.jettison.json.JSONObject;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.HTreeMap;
+import org.mapdb.HTreeMap.KeySet;
+import org.mapdb.Serializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import it.unipi.di.acube.searchapi.interfaces.CacheableWebSearchApi;
 import it.unipi.di.acube.searchapi.interfaces.WebSearchApi;
 import it.unipi.di.acube.searchapi.model.WebsearchResponse;
 
-public class CachedSearchApi implements WebSearchApi{
+public class CachedSearchApi implements WebSearchApi {
+    public final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private int flushCounter = 0;
     private final int MAX_RETRY = 3;
-    private final int FLUSH_EVERY = 50;
-    private HashMap<String, byte[]> url2jsonCache = new HashMap<>();
-    private String resultsCacheFilename;
+    private DB db;
+    private HTreeMap<String, byte[]> queryResponses;
     private CacheableWebSearchApi api;
 
-    public CachedSearchApi(CacheableWebSearchApi api, String cacheFilename) throws FileNotFoundException, ClassNotFoundException, IOException {
+    public CachedSearchApi(CacheableWebSearchApi api, String cachePath)
+            throws FileNotFoundException, ClassNotFoundException, IOException {
         this.api = api;
-        this.setCache(cacheFilename);
-    }
-
-    private synchronized void increaseFlushCounter() throws FileNotFoundException, IOException {
-        flushCounter++;
-        if (flushCounter % FLUSH_EVERY == 0)
-            flush();
+        this.db = DBMaker.fileDB(cachePath).fileMmapEnable().closeOnJvmShutdown().make();
+        this.queryResponses = db.hashMap("queries", Serializer.STRING, Serializer.BYTE_ARRAY).createOrOpen();
     }
 
     /**
@@ -56,56 +55,21 @@ public class CachedSearchApi implements WebSearchApi{
 
         URI uri = api.getQueryURI(query);
 
-        JSONObject result = null;
-        byte[] compressed = url2jsonCache.get(uri.toString());
-        if (compressed != null)
-            result = new JSONObject(StringCompress.decompress(compressed));
+        JSONObject result = queryResponses.containsKey(uri.toString())
+                ? new JSONObject(StringCompress.decompress(queryResponses.get(uri.toString()))) : null;
 
         boolean cached = !forceCacheOverride && result != null;
-        System.out.printf("%s%s %s%n", forceCacheOverride ? "<forceCacheOverride>" : "", cached ? "<cached>" : "Querying", uri);
+        LOG.info("{}{} {}", forceCacheOverride ? "<forceCacheOverride>" : "", cached ? "<cached>" : "Querying", uri);
         if (!cached) {
             api.query(query);
             result = api.getOriginalJson();
-            url2jsonCache.put(uri.toString(), StringCompress.compress(result.toString()));
-            increaseFlushCounter();
+            queryResponses.put(uri.toString(), StringCompress.compress(result.toString()));
         }
 
         if (api.recacheNeeded(result) && retryLeft > 0)
             return query(query, retryLeft - 1);
 
         return api.buildResponseFromJson(result);
-    }
-
-    /**
-     * Set the file to which the responses cache is bound.
-     * 
-     * @param cacheFilename
-     *            the cache file name.
-     * @throws FileNotFoundException
-     *             if the file could not be open for reading.
-     * @throws IOException
-     *             if something went wrong while reading the file.
-     * @throws ClassNotFoundException
-     *             is the file contained an object of the wrong class.
-     */
-    public void setCache(String cacheFilename) throws FileNotFoundException, IOException, ClassNotFoundException {
-        if (resultsCacheFilename != null && resultsCacheFilename.equals(cacheFilename))
-            return;
-        System.out.println("Loading websearch cache...");
-        resultsCacheFilename = cacheFilename;
-        if (new File(resultsCacheFilename).exists()) {
-            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(resultsCacheFilename));
-            url2jsonCache = (HashMap<String, byte[]>) ois.readObject();
-            ois.close();
-        }
-    }
-
-    /**
-     * Clear the response cache and call the garbage collector.
-     */
-    public void unSetCache() {
-        url2jsonCache = new HashMap<>();
-        System.gc();
     }
 
     /**
@@ -116,24 +80,29 @@ public class CachedSearchApi implements WebSearchApi{
      */
     public void mergeCache(HashMap<String, byte[]> newCache) {
         for (String key : newCache.keySet()) {
-            url2jsonCache.put(key, newCache.get(key));
+            queryResponses.put(key, newCache.get(key));
             flushCounter++;
         }
     }
 
     public synchronized void flush() throws FileNotFoundException, IOException {
-        if (flushCounter > 0 && resultsCacheFilename != null) {
-            System.out.println("Flushing Websearch cache...");
-            new File(resultsCacheFilename).createNewFile();
-            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(resultsCacheFilename));
-            oos.writeObject(url2jsonCache);
-            oos.close();
-            System.out.println("Flushing Websearch cache done.");
+        if (flushCounter > 0) {
+            LOG.info("Flushing Websearch cache...");
+            db.commit();
+            LOG.info("Flushing Websearch cache done.");
         }
     }
 
     @Override
     public URI getQueryURI(String query) throws URISyntaxException {
         return api.getQueryURI(query);
+    }
+
+    public long getCachedRequests() {
+        return queryResponses.sizeLong();
+    }
+
+    public KeySet<String> getCachedURIs() {
+        return queryResponses.getKeys();
     }
 }
