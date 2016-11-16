@@ -1,19 +1,23 @@
 package it.unipi.di.acube.searchapi.model;
 
-import java.util.*;
+import java.net.URI;
+import java.util.List;
 
 import org.codehaus.jettison.json.JSONObject;
 
 public class WebsearchResponse {
-    long totalEstimatedMatches;
-    JSONObject jsonResponse;
-    List<WebsearchResponseEntry> webEntries;
+    private long totalEstimatedMatches;
+    private List<WebsearchResponseEntry> webEntries;
+    private List<URI> calledUris;
+    private List<JSONObject> responses;
 
-    public WebsearchResponse(long totalEstimatedMatches, List<WebsearchResponseEntry> webEntries, JSONObject jsonResponse) {
+    public WebsearchResponse(long totalEstimatedMatches, List<WebsearchResponseEntry> webEntries, List<URI> calledURIs,
+            List<JSONObject> responses) {
         this.totalEstimatedMatches = totalEstimatedMatches;
         this.webEntries = webEntries;
-        this.jsonResponse = jsonResponse;
-    };
+        this.responses = responses;
+        this.calledUris = calledURIs;
+    }
 
     public long getTotalResults() {
         return totalEstimatedMatches;
@@ -23,7 +27,11 @@ public class WebsearchResponse {
         return webEntries;
     }
 
-    public JSONObject getJsonResponse() {
-        return jsonResponse;
+    public List<JSONObject> getJsonResponses() {
+        return responses;
+    }
+
+    public List<URI> getCalledURIs() {
+        return calledUris;
     }
 }
