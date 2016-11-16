@@ -12,6 +12,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
+import org.mapdb.HTreeMap.KeySet;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,5 +88,12 @@ public class CachedWebsearchApi extends WebsearchApi {
      */
     public synchronized void close() {
         db.close();
+    }
+
+    /**
+     * @return the set of cached URIs.
+     */
+    public KeySet<String> cachedUris() {
+        return queryResponses.getKeys();
     }
 }
