@@ -199,9 +199,12 @@ public class BingSearchApiCaller implements WebSearchApiCaller {
             count += countResults(jsonResponse);
             if (count >= neededResults)
                 return true;
+            if (countResults(jsonResponse) == 0)
+                return true;
+            if (jsonResponse.getJSONObject("rankingResponse").getJSONObject("mainline").getJSONArray("items")
+                    .length() < MAX_RESULTS_PER_QUERY)
+                return true;
         }
-        if (countResults(jsonResponses.get(jsonResponses.size() - 1)) == 0)
-            return true;
         return false;
     }
 }
