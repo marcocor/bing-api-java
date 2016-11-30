@@ -9,7 +9,7 @@ public class QueryGoogle {
 
     public static void main(String[] args) throws Exception {
         GoogleSearchApiCaller google = new GoogleSearchApiCaller(args[0], args[1]);
-        CachedWebsearchApi cached = new CachedWebsearchApi(google, args[2]);
+        CachedWebsearchApi cached = CachedWebsearchApi.builder().api(google).path(args[2]).create();
         WebsearchResponse response = cached.query(args[3], Integer.parseInt(args[4]));
 
         System.out.printf("Estimated result count: %d\n", response.getTotalResults());

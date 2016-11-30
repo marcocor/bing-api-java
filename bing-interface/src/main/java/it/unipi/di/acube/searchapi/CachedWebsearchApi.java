@@ -24,12 +24,74 @@ public class CachedWebsearchApi extends WebsearchApi {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private DB db;
     private HTreeMap<String, byte[]> queryResponses;
+    private String cachePath;
 
-    public CachedWebsearchApi(WebSearchApiCaller api, String cachePath)
+    /**
+     * Builder for CachedWebsearchApi.
+     *
+     */
+    public static class CachedWebsearchApiBuilder {
+        private WebSearchApiCaller api;
+        private String cachePath;
+        private CachedWebsearchApi cachedApi;
+
+        /**
+         * @param api
+         *            a Websearch API caller
+         * @return this builder.
+         */
+        public CachedWebsearchApiBuilder api(WebSearchApiCaller api) {
+            this.api = api;
+            return this;
+        }
+
+        /**
+         * @param path
+         *            the database storage path.
+         * @return this builder.
+         */
+        public CachedWebsearchApiBuilder path(String path) {
+            this.cachePath = path;
+            return this;
+        }
+
+        /**
+         * @param cachedApi
+         *            the other API with an open database to reuse. If the path is specified, the DB of this api must have the
+         *            same path. Ignored if null.
+         * @return this builder.
+         */
+        public CachedWebsearchApiBuilder dbFrom(CachedWebsearchApi cachedApi) {
+            this.cachedApi = cachedApi;
+            return this;
+        }
+
+        public CachedWebsearchApi create() throws FileNotFoundException, ClassNotFoundException, IOException {
+            if (cachedApi == null && cachePath == null)
+                throw new IllegalArgumentException("You need to either specify a storage path or give a cached API to reuse.");
+            if (cachedApi != null && cachePath != null && !cachePath.equals(cachedApi.cachePath))
+                throw new IllegalArgumentException(String.format(
+                        "Trying to reuse Websearch cache but different path provided: %s vs %s", cachePath, cachedApi.cachePath));
+            if (cachePath == null)
+                cachePath = cachedApi.cachePath;
+            DB db;
+            if (cachedApi != null) {
+                LOG.debug("Reusing already open Webcache database.");
+                db = cachedApi.db;
+            } else {
+                db = DBMaker.fileDB(cachePath).fileMmapEnable().closeOnJvmShutdownWeakReference().make();
+            }
+            return new CachedWebsearchApi(api, db, cachePath,
+                    db.hashMap("queries", Serializer.STRING, Serializer.BYTE_ARRAY).createOrOpen());
+        }
+    }
+
+    private CachedWebsearchApi(WebSearchApiCaller api, DB db, String cachePath, HTreeMap<String, byte[]> queryResponses)
             throws FileNotFoundException, ClassNotFoundException, IOException {
         super(api);
-        this.db = DBMaker.fileDB(cachePath).fileMmapEnable().closeOnJvmShutdownWeakReference().make();
-        this.queryResponses = db.hashMap("queries", Serializer.STRING, Serializer.BYTE_ARRAY).createOrOpen();
+        this.db = db;
+        this.queryResponses = queryResponses;
+        this.cachePath = cachePath;
     }
 
     @Override
@@ -95,5 +157,9 @@ public class CachedWebsearchApi extends WebsearchApi {
      */
     public KeySet<String> cachedUris() {
         return queryResponses.getKeys();
+    }
+
+    public static CachedWebsearchApiBuilder builder() {
+        return new CachedWebsearchApiBuilder();
     }
 }
