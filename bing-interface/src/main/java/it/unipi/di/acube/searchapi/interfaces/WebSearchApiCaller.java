@@ -21,7 +21,7 @@ public interface WebSearchApiCaller {
      * @param response
      *            a response given by this API.
      * @return the number of web results in a single response.
-     * @throws JSONException
+     * @throws JSONException if the response object was unreadable.
      */
     int countResults(JSONObject response) throws JSONException;
 
@@ -39,7 +39,7 @@ public interface WebSearchApiCaller {
      * @param jsonResponses
      *            a list of subsequent responses provided by the search engine API for a single query.
      * @return whether or not the responses are badly formed and requests need to be done again.
-     * @throws JSONException
+     * @throws JSONException if one of the response objects was unreadable.
      */
     boolean recacheNeeded(List<JSONObject> jsonResponses) throws JSONException;
 
@@ -51,7 +51,7 @@ public interface WebSearchApiCaller {
      * @param neededResults
      *            how many results are requested.
      * @return an aggregated result for a query.
-     * @throws JSONException
+     * @throws JSONException if one of the response objects was unreadable.
      */
     WebsearchResponse buildResponseFromJson(List<URI> uris, List<JSONObject> jsonResponses, int neededResults)
             throws JSONException;
@@ -62,7 +62,7 @@ public interface WebSearchApiCaller {
      * @param resultsSoFar
      *            the number of results that have been already returned for this query (this determines the search offset).
      * @return a URI univocally representing the call to the API for this query.
-     * @throws URISyntaxException
+     * @throws URISyntaxException if it was not possible to build the URI.
      */
     URI getQueryURI(String query, int resultsSoFar) throws URISyntaxException;
 
@@ -72,7 +72,7 @@ public interface WebSearchApiCaller {
      * @param neededResults
      *            how many results are requested.
      * @return true iff the query is complete, i.e. does not need more querying.
-     * @throws URISyntaxException
+     * @throws JSONException if one of the response objects was unreadable.
      */
     boolean queryComplete(List<JSONObject> jsonResponses, int neededResults) throws JSONException;
 

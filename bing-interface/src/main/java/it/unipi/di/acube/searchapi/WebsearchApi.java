@@ -31,6 +31,8 @@ public class WebsearchApi {
      * 
      * @param query
      *            the query.
+     * @param neededResults
+     *            how many results are needed (higher numbers may result in higher number of queries).
      * @return the response to the query
      * @throws Exception
      *             is the call to the API failed.
