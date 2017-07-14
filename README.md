@@ -48,7 +48,7 @@ WebsearchResponse response = api.query("QUERY_TEXT", NUMBER_OF_RESULTS_NEEDED);
 You can see a full example of a command-line script for [Bing](bing-interface/src/main/java/it/unipi/di/acube/searchapi/main/QueryBing.java) or [Google](bing-interface/src/main/java/it/unipi/di/acube/searchapi/main/QueryGoogle.java).
 
 # Contacts
-For any bug you encounter, you can open a bug report on [github](http://github.com/marcor/bing-api-java).
+For any bug you encounter, you can open a bug report on [github](https://github.com/marcocor/bing-api-java/issues).
 
 For any enquiry, send an email at x at di.unipi.it (replace x with 'cornolti')
 
