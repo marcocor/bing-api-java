@@ -36,9 +36,8 @@ public class BingSearchApiCaller implements WebSearchApiCaller {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String API_PROTOCOL = "https";
     private static final String API_HOST = "api.cognitive.microsoft.com";
-    private static final String API_PATH = "/bing/v5.0/search";
+    private static final String API_PATH = "/bing/v7.0/search";
     private static final String DEFAULT_MARKET = "en-US";
-    private static final String DEFAULT_RESPONSE_FILTER = "RelatedSearches,SpellSuggestions,Webpages";
     private static final SafeSearchOpt DEFAULT_SAFE_SEARCH = SafeSearchOpt.OFF;
     private static final int MAX_RESULTS_PER_QUERY = 50;
     private static final boolean TEXT_DECORATIONS = true;
@@ -46,7 +45,6 @@ public class BingSearchApiCaller implements WebSearchApiCaller {
 
     private String bingKey;
     private String market = DEFAULT_MARKET;
-    private String responseFilter = DEFAULT_RESPONSE_FILTER;
     private SafeSearchOpt safeSearch = DEFAULT_SAFE_SEARCH;
 
     public enum SafeSearchOpt {
@@ -70,16 +68,6 @@ public class BingSearchApiCaller implements WebSearchApiCaller {
         if (!market.matches("[a-z][a-z]-[A-Z][A-Z]"))
             throw new IllegalArgumentException("Market must be in the form en-US");
         this.market = market;
-        return this;
-    }
-
-    /**
-     * @param responseFilter
-     *            the response filter (see Bing API reference).
-     * @return this.
-     */
-    public BingSearchApiCaller setResponseFilter(String responseFilter) {
-        this.responseFilter = responseFilter;
         return this;
     }
 
@@ -128,7 +116,7 @@ public class BingSearchApiCaller implements WebSearchApiCaller {
     public URI getQueryURI(String query, int resultsSoFar) throws URISyntaxException {
         URI uri = builder.clearParameters().setScheme(API_PROTOCOL).setHost(API_HOST).setPath(API_PATH).addParameter("q", query)
                 .addParameter("count", Integer.toString(MAX_RESULTS_PER_QUERY)).addParameter("mkt", market)
-                .addParameter("responseFilter", responseFilter).addParameter("safeSearch", safeSearchToString(safeSearch))
+                .addParameter("safeSearch", safeSearchToString(safeSearch))
                 .addParameter("textDecorations", Boolean.toString(TEXT_DECORATIONS))
                 .addParameter("offset", Integer.toString(resultsSoFar)).build();
         return uri;
