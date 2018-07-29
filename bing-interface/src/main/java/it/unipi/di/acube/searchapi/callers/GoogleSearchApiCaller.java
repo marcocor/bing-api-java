@@ -175,7 +175,8 @@ public class GoogleSearchApiCaller implements WebSearchApiCaller {
             JSONObject entry = items.getJSONObject(i);
             String snippet = Jsoup.parse(entry.getString("htmlSnippet").replaceAll("<b>", WebsearchApi.SNIPPET_BOLD_START_STR)
                     .replaceAll("</b>", WebsearchApi.SNIPPET_BOLD_END_STR)).text();
-            webEntries.add(new WebsearchResponseEntry(entry.getString("title"), entry.getString("link"), snippet, null));
+            webEntries.add(new WebsearchResponseEntry(entry.has("title") ? entry.getString("title") : "", entry.getString("link"),
+                    snippet, null));
         }
         return webEntries;
     }
